@@ -76,13 +76,15 @@
             position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
             font-size: 0.7rem; color: #555; letter-spacing: 1px; z-index: 101; font-weight: 700;
         }
-        #record-btn {
-            position: fixed; bottom: 15px; right: 15px; width: 45px; height: 45px;
+        .ctrl-btn {
+            position: fixed; bottom: 15px; width: 45px; height: 45px;
             background: #222; border: 1px solid #444; border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; z-index: 102; transition: all 0.3s;
         }
-        #record-btn.recording { background: var(--accent-red); border-color: white; animation: pulse 1.5s infinite; }
+        #record-btn { right: 15px; }
+        #record-btn-mobile { left: 15px; }
+        .recording { background: var(--accent-red) !important; border-color: white !important; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
@@ -112,7 +114,13 @@
 
 <div id="footer-text">pi-play.vercel.app</div>
 
-<button id="record-btn" onclick="toggleRecording()">
+<button id="record-btn-mobile" class="ctrl-btn" onclick="toggleMobileRecord()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+        <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+    </svg>
+</button>
+
+<button id="record-btn" class="ctrl-btn" onclick="toggleRecording()">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
         <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
     </svg>
@@ -291,24 +299,36 @@
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
             try {
                 const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                recordedChunks = [];
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: "video/webm" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url; a.download = "PiMaster-Play.webm"; a.click();
-                    btn.classList.remove('recording');
-                };
-                mediaRecorder.start();
-                btn.classList.add('recording');
-            } catch (err) {
-                alert("Browser mobile tidak mendukung perekaman via web. Gunakan Perekam Layar bawaan HP kamu.");
-            }
+                setupRecorder(stream, btn, "PiMaster-Desktop.webm");
+            } catch (err) {}
         } else {
             mediaRecorder.stop();
         }
+    }
+
+    function toggleMobileRecord() {
+        const btn = document.getElementById('record-btn-mobile');
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            const stream = canvas.captureStream(30);
+            setupRecorder(stream, btn, "PiMaster-Canvas.webm");
+        } else {
+            mediaRecorder.stop();
+        }
+    }
+
+    function setupRecorder(stream, btn, fileName) {
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = fileName; a.click();
+            btn.classList.remove('recording');
+        };
+        mediaRecorder.start();
+        btn.classList.add('recording');
     }
 
     document.body.addEventListener('click', (e) => {
