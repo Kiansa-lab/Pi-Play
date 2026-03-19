@@ -170,7 +170,7 @@
         isGameOver = true;
         stopTimer();
         document.body.classList.add('error-state');
-        document.getElementById('feedback').innerText = "KAMU SALAH!";
+        document.getElementById('feedback').innerText = "WRONG";
         document.getElementById('hiddenInput').disabled = true;
         const displayEl = document.getElementById('inputDisplay');
         let nextDigits = PI_DATA.substr(totalDigitsPassed, 5).split('');
@@ -304,7 +304,7 @@
                 mediaRecorder.start();
                 btn.classList.add('recording');
             } catch (err) {
-                alert("Recording failed or not supported in this browser.");
+                alert("Browser mobile tidak mendukung perekaman via web. Gunakan Perekam Layar bawaan HP kamu.");
             }
         } else {
             mediaRecorder.stop();
@@ -312,7 +312,7 @@
     }
 
     document.body.addEventListener('click', (e) => {
-        if (!isGameOver && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SVG') {
+        if (!isGameOver && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SVG' && e.target.tagName !== 'path') {
             document.getElementById('hiddenInput').focus();
         }
     });
